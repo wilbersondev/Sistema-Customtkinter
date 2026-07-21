@@ -1,5 +1,20 @@
 import customtkinter as ctk 
 import time
+import sqlite3
+import threading
+
+conexao = sqlite3.connect("Gerenciamento.db")
+cursor = conexao.cursor()
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS Gerenciamento( 
+               Id INTEGER PRIMARY KEY,
+               Nome TEXT,
+               Nivel TEXT
+
+    )
+""")
+conexao.commit()
+
 # O "customtkinter é o mesmo tkinter,só que tem padrões mais bonitos, ELE PERMITER DARKMODE, ELE PERMITE PERSONALIZAÇÕA MAIS NONITAS NATURALMENTE ""
 
 #vAMOS DEFINE OS PADRÕES DE CORES DO CUSTOMTKINTER 
@@ -10,7 +25,7 @@ class Aplicativo(ctk.CTk):# ESSA É UMA SUB CLASS DO TKINTER, 2 PASSO CRIA SUA C
     def __init__(self):# fução __init__ tem que rodar o  super().__init__()
         super().__init__()
         # executa os meus comandos persnalizados 
-        self.title =("Sistema de Cadastro")
+        self.title("Sistema de Cadastro")
         
 
         # cria  a divisão da tela 
@@ -181,12 +196,19 @@ class Aplicativo(ctk.CTk):# ESSA É UMA SUB CLASS DO TKINTER, 2 PASSO CRIA SUA C
         nome = self.campo_nome.get()
         if self.nivel_usuario.get() == 2:
             nivel = "Admin"
+
         else:
             nivel = "Básico"
         receber_notificações = self.checkbox_notificacoes.get()
-        print("Nome", nome)
-        print("Nivel do Usuário", nivel)
-        print("Notificação", receber_notificações)
+        cursor.execute(
+            "INSERT INTO  Gerenciamento (nome, nivel) VALUES (?, ?)", # INSERIR DADOS DE ENTRADA NA TABELA
+            (nome, nivel)
+        )
+        conexao.commit()  
+        print("Salvo no banco:", nome)    
+       # print("Nome", nome)
+       # print("Nivel do Usuário", nivel)
+       # print("Notificação", receber_notificações)
         self.titulo.configure(text = f"{nome} App") # A função ".configure" voçe pode editar configurações dentro de um elemento 
         self.sub_titulo.configure(text = nivel)
 
@@ -194,9 +216,13 @@ class Aplicativo(ctk.CTk):# ESSA É UMA SUB CLASS DO TKINTER, 2 PASSO CRIA SUA C
         self.label_valor_volume.configure(text = f"{int(novo_valor_volume)}%")
     
     def carregar_progresso(self):
+        thread = threading.Thread(target=self.rodar_progresso)
+        thread.start()
+        
+    def rodar_progresso(self):
         for i in range(100):
             # executar uma tarefa que demora 
-            time.sleep(0.1) # A biblioteca time, foi usada pra cada vez que houve uma interação do "for" rodar, por tras dos panos ela ta atualizando  
+            time.sleep(0.05) # A biblioteca time, foi usada pra cada vez que houve uma interação do "for" rodar, por tras dos panos ela ta atualizando  
             self.barra_progresso.set((i + 1) / 100)
             self.update() # usado para atualizar a interface da janela 
 
